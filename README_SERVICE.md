@@ -152,6 +152,7 @@ export POPO_VLLM_MODEL=Popo
 export POPO_TIMEOUT=300
 export POPO_MAX_TOKENS=8192
 export POPO_TEMPERATURE=0
+export POPO_MAX_PROMPT_CHARS=100000
 
 # Aggregation service
 export SERVICE_MAX_POPO_CONCURRENCY=1
@@ -170,7 +171,39 @@ vllm serve /models/MinerU-Popo \
   --limit-mm-per-prompt '{"image":1}'
 ```
 
-## Start the Aggregation Service
+## Start with Docker Compose
+
+The default `docker-compose.yml` starts only the aggregation service. MinerU and vLLM are expected to be already running and reachable through the configured URLs.
+
+Default compose values target services running on the Docker host:
+
+```yaml
+MINERU_FILE_PARSE_URL: http://host.docker.internal:8888/file_parse
+POPO_VLLM_BASE_URL: http://host.docker.internal:8000/v1
+```
+
+Start:
+
+```bash
+docker compose up --build -d
+```
+
+Override URLs when MinerU/vLLM are on different hosts:
+
+```bash
+MINERU_FILE_PARSE_URL=http://10.0.0.12:8888/file_parse \
+POPO_VLLM_BASE_URL=http://10.0.0.13:8000/v1 \
+POPO_VLLM_API_KEY=EMPTY \
+docker compose up --build -d
+```
+
+Check health:
+
+```bash
+curl http://127.0.0.1:9000/health
+```
+
+## Start without Docker
 
 Install the extra service dependencies:
 
