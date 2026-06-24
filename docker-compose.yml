@@ -1,0 +1,40 @@
+services:
+  mineru-popo-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mineru-popo-service:latest
+    container_name: mineru-popo-service
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      # MinerU OCR service. This service calls ${MINERU_FILE_PARSE_URL} and
+      # requests only middle_json from MinerU's /file_parse response.
+      MINERU_FILE_PARSE_URL: ${MINERU_FILE_PARSE_URL:-http://host.docker.internal:8888/file_parse}
+      MINERU_TIMEOUT: ${MINERU_TIMEOUT:-600}
+      MINERU_BACKEND: ${MINERU_BACKEND:-pipeline}
+      MINERU_PARSE_METHOD: ${MINERU_PARSE_METHOD:-auto}
+      MINERU_LANG: ${MINERU_LANG:-ch}
+
+      # Popo vLLM OpenAI-compatible endpoint.
+      POPO_VLLM_BASE_URL: ${POPO_VLLM_BASE_URL:-http://host.docker.internal:8000/v1}
+      POPO_VLLM_API_KEY: ${POPO_VLLM_API_KEY:-EMPTY}
+      POPO_VLLM_MODEL: ${POPO_VLLM_MODEL:-Popo}
+      POPO_TIMEOUT: ${POPO_TIMEOUT:-300}
+      POPO_MAX_TOKENS: ${POPO_MAX_TOKENS:-8192}
+      POPO_TEMPERATURE: ${POPO_TEMPERATURE:-0}
+      POPO_MAX_PROMPT_CHARS: ${POPO_MAX_PROMPT_CHARS:-100000}
+
+      # The current in-memory runtime temporarily patches upstream module-level
+      # functions under a process-local lock. Keep this at 1 unless that runtime
+      # is replaced by a pure-function refactor.
+      SERVICE_MAX_POPO_CONCURRENCY: ${SERVICE_MAX_POPO_CONCURRENCY:-1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
