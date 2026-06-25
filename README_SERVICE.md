@@ -158,7 +158,7 @@ export POPO_MAX_PROMPT_CHARS=100000
 export SERVICE_MAX_POPO_CONCURRENCY=1
 ```
 
-## Start vLLM for Popo
+## Start vLLM for Popo Manually
 
 ```bash
 vllm serve /models/MinerU-Popo \
@@ -173,13 +173,23 @@ vllm serve /models/MinerU-Popo \
 
 ## Start with Docker Compose
 
-The default `docker-compose.yml` starts only the aggregation service. MinerU and vLLM are expected to be already running and reachable through the configured URLs.
+The default `docker-compose.yml` starts two services:
 
-Default compose values target services running on the Docker host:
+```text
+mineru-popo-service  # aggregation API, exposed on host port 9000
+popo-vllm            # vLLM OpenAI-compatible Popo service
+```
+
+MinerU OCR is still expected to be an external service and is configured through `MINERU_FILE_PARSE_URL`.
+
+Default compose values:
 
 ```yaml
 MINERU_FILE_PARSE_URL: http://host.docker.internal:8888/file_parse
-POPO_VLLM_BASE_URL: http://host.docker.internal:8000/v1
+POPO_VLLM_BASE_URL: http://popo-vllm:8000/v1
+VLLM_HOST_PORT: 8000
+VLLM_GPU_DEVICE_IDS: 0
+POPO_MODEL_HOST_PATH: ./models/MinerU-Popo
 ```
 
 Start:
@@ -188,12 +198,27 @@ Start:
 docker compose up --build -d
 ```
 
-Override URLs when MinerU/vLLM are on different hosts:
+Specify GPU card and host port:
+
+```bash
+VLLM_GPU_DEVICE_IDS=1 \
+VLLM_HOST_PORT=18000 \
+POPO_MODEL_HOST_PATH=/data/models/MinerU-Popo \
+docker compose up --build -d
+```
+
+Use multiple visible cards:
+
+```bash
+VLLM_GPU_DEVICE_IDS=0,1 \
+VLLM_HOST_PORT=18000 \
+docker compose up --build -d
+```
+
+Override MinerU URL:
 
 ```bash
 MINERU_FILE_PARSE_URL=http://10.0.0.12:8888/file_parse \
-POPO_VLLM_BASE_URL=http://10.0.0.13:8000/v1 \
-POPO_VLLM_API_KEY=EMPTY \
 docker compose up --build -d
 ```
 
