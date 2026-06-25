@@ -14,3 +14,13 @@ services:
       --served-model-name Popo
       --dtype bfloat16
       --max-model-len 32768
+    networks:
+      mineru_popo_net:
+        ipv4_address: 172.51.0.20
+
+networks:
+  mineru_popo_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.51.0.0/16
