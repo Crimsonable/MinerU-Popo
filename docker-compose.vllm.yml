@@ -1,0 +1,16 @@
+services:
+  popo-vllm:
+    image: vllm/vllm-openai:latest
+    container_name: popo-vllm
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models/MinerU-Popo:/models/MinerU-Popo:ro
+    command: >
+      --model /models/MinerU-Popo
+      --host 0.0.0.0
+      --port 8000
+      --served-model-name Popo
+      --dtype bfloat16
+      --max-model-len 32768
